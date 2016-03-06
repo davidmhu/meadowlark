@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var path = require('path');
+var fortunes = require("./lib/fortune.js");
 
 app.set('views', path.join(__dirname,'app_server', 'views'));
 
@@ -20,17 +21,11 @@ app.get('/', function(req, res){
     res.render('home');
 });
 
-var fortunes = [
-	"Conquer your fears or they will conquer you.", "Rivers need springs.",
-	"Do not fear what you don't know.",
-	"You will have a pleasant surprise.", "Whenever possible, keep it simple.",
-	];
 app.get('/about', function(req, res){
     /*res.type('text/plain');
     res.send('About Meadowlark Travel');*/
-    var randomFortune =
-        fortunes[Math.floor(Math.random() * fortunes.length)];
-    res.render('about',{fortune:randomFortune});
+    
+    res.render('about',{fortune:fortunes.getFortune()});
 });
 
     // custom 404 page
