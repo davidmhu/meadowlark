@@ -37,7 +37,13 @@ app.get('/about', function(req, res){
     });
 });
 
-    // custom 404 page
+app.get('/tours/hood-river', function(req, res){
+    res.render('tours/hood-river'); 
+});
+app.get('/tours/request-group-rate', function(req, res){
+    res.render('tours/request-group-rate');
+});
+// custom 404 page
 app.use(function(req, res){ 
 			/*res.type('text/plain');
             res.status(404);
@@ -52,7 +58,6 @@ app.use(function(err, req, res, next){
             res.send('500 - Server Error');*/
     res.render('500');
 });
-
 
 
 app.listen(app.get('port'), function(){
