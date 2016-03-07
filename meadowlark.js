@@ -31,7 +31,10 @@ app.get('/about', function(req, res){
     /*res.type('text/plain');
     res.send('About Meadowlark Travel');*/
     
-    res.render('about',{fortune:fortunes.getFortune()});
+    res.render('about',{
+        fortune:fortunes.getFortune(),
+        pageTestScript:'/qa/tests-about.js'
+    });
 });
 
     // custom 404 page
