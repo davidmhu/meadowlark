@@ -2,8 +2,10 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var formidable = require('formidable');//for form handle
+var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var fortunes = require("./lib/fortune.js");
+var fs = require('fs');
 
 app.set('views', path.join(__dirname,'app_server', 'views'));
 
@@ -21,6 +23,24 @@ app.use(function(req, res, next){
 	res.locals.showTests = app.get('env') !== 'production' &&
                     req.query.test === '1';
             next();
+});
+
+app.use(cookieParser());
+app.use(require('express-session')({
+      secret: 'This is a secret',
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
+      },
+      
+      resave:true,
+      saveUninitialized:true
+    }));
+app.use(function(req, res, next){
+    // if there's a flash message, transfer
+    // it to the context, then clear it
+    res.locals.flash = req.session.flash;
+    delete req.session.flash;
+    next();
 });
 
 app.get('/', function(req, res){ 
@@ -66,7 +86,7 @@ app.get('/contest/vacation-photo',function(req,res){
             year: now.getFullYear(),month: now.getMonth()
         });
 });
-app.post('/contest/vacation-photo/:year/:month', function(req, res){
+/*app.post('/contest/vacation-photo/:year/:month', function(req, res){
     var form = new formidable.IncomingForm();
     form.parse(req, function(err, fields, files){
     if(err) return res.redirect(303, '/error');
@@ -75,6 +95,44 @@ app.post('/contest/vacation-photo/:year/:month', function(req, res){
         console.log('received files:');
         console.log(files);
         res.redirect(303, '/thank-you');
+    });
+});*/
+// make sure data directory exists
+var dataDir = __dirname + '/data';
+var vacationPhotoDir = dataDir + '/vacation-photo';
+fs.existsSync(dataDir) || fs.mkdirSync(dataDir);
+fs.existsSync(vacationPhotoDir) || fs.mkdirSync(vacationPhotoDir);
+
+function saveContestEntry(contestName, email, year, month, photoPath){
+// TODO...this will come later
+}
+app.post('/contest/vacation-photo/:year/:month', function(req, res){
+    var form = new formidable.IncomingForm();
+    form.uploadDir = "./tmp";
+    form.parse(req, function(err, fields, files){
+        if(err) return res.redirect(303, '/error');
+        if(err) {
+            res.session.flash = {
+                type: 'danger',
+                intro: 'Oops!',
+                message: 'There was an error processing your submission. ' +
+                'Pelase try again.',
+            };
+            return res.redirect(303, '/contest/vacation-photo');
+        }
+        var photo = files.photo;
+        var dir = vacationPhotoDir + '/' + Date.now();
+        var path = dir + '/' + photo.name;
+        fs.mkdirSync(dir);
+        fs.renameSync(photo.path, dir + '/' + photo.name);
+        saveContestEntry('vacation-photo', fields.email,
+            req.params.year, req.params.month, path);
+        req.session.flash = {
+            type: 'success',
+            intro: 'Good luck!',
+            message: 'You have been entered into the contest.',
+        };
+        return res.redirect(303, '/');
     });
 });
 
@@ -95,7 +153,23 @@ app.use(function(err, req, res, next){
 });
 
 
-app.listen(app.get('port'), function(){
+/*app.listen(app.get('port'), function(){
 console.log( 'Express started on http://localhost:' +
         app.get('port') + '; press Ctrl-C to terminate.' );
+    });*/
+
+function startServer() {
+    require('http').createServer(app).listen(app.get('port'), function(){
+        console.log( 'Express started in ' + app.get('env') +
+        ' mode on http://localhost:' + app.get('port') +
+        '; press Ctrl-C to terminate.' );
     });
+}
+if(require.main === module){
+    // application run directly; start app server
+    startServer();
+    } else {
+    // application imported as a module via "require": export function
+    // to create server
+    module.exports = startServer;
+}

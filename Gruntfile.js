@@ -11,7 +11,7 @@ module.exports = function(grunt){
 	// configure plugins
 	grunt.initConfig({
 		cafemocha: {
-			all: { src: 'public/qa/tests-*.js', options: { ui: 'tdd' }, }
+			all: { src: 'public/qa/tests-stress.js', options: { ui: 'tdd' }, }
 		},
 		jshint: {
 			app: ['meadowlark.js', 'public/js/**/*.js',
